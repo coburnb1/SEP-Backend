@@ -1,45 +1,48 @@
 const Organization = require('../models/organizationModel');
+const mongoose = require("mongoose");
 
-const getAllOrgs = async () => {
+const getOrganizationsByOrganizer = async (organizerID) => {
     try{
-        return await Organization.find();
-    } catch (err) {
-        console.error('Error finding organizations', err);
+        organizerID = new mongoose.Types.ObjectId(organizerID);
+        return await Organization.find({ organizer_id: organizerID });
+    }
+    catch (err) {
+        console.error('Error finding organizations by organizer', err);
         throw err;
     }
 }
 
-const getOrg = async (organizationId) => {
+const getOrganizationByID = async (organizationID) => {
     try{
-        return await Organization.findById(organizationId);
+        return await Organization.findById(organizationID);
     } catch (err) {
-        console.error('Error finding organization', err);
+        console.error('Error finding organization by ID', err);
         throw err;
     }
 }
 
-const deleteOrg = async (organizationId) => {
+const removeByID = async (organizationID) => {
     try{
-        return await Organization.findByIdAndDelete(organizationId);
+        return await Organization.findByIdAndDelete(organizationID);
     } catch (err) {
         console.error('Error deleting organization', err);
         throw err;
     }
 }
 
-const addOrg = async (organizationData) => {
+const createOrg = async (organizationData) => {
     try{
         const organization = new Organization(organizationData);
         return await organization.save();
     } catch (err) {
-        console.error('Error adding organization', err);
+        console.error('Error creating organization', err);
         throw err;
     }
 }
 
 module.exports = {
-    getAllOrgs,
-    getOrg,
-    deleteOrg,
-    addOrg,
+    getOrganizationsByOrganizer,
+    getOrganizationByID,
+    removeByID,
+    createOrg,
 }

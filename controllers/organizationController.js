@@ -1,15 +1,15 @@
-const organizationService = require('../../services/organizationService');
+const organizationService = require('../services/organizationService');
 
-const allOrgs = async (req, res) => {
+const retrieveAll = async (req, res) => {
     try{
-        const organizations = await organizationService.getAllOrgs();
+        const organizations = await organizationService.getAllOrgs(req.params.id);
         res.status(200).json(organizations);
     } catch (err) {
         res.status(400).json({ message: err.message });
     }
 }
 
-const specificOrg = async (req, res) => {
+const retrieve = async (req, res) => {
     try{
         const organization = await organizationService.getOrg(req.params.id);
         res.status(200).json(organization);
@@ -18,7 +18,7 @@ const specificOrg = async (req, res) => {
     }
 }
 
-const deleteOrg = async (req, res) => {
+const remove = async (req, res) => {
     try{
         const organization = await organizationService.deleteOrg(req.params.id);
         res.status(200).json(organization);
@@ -27,7 +27,7 @@ const deleteOrg = async (req, res) => {
     }
 }
 
-const addOrg = async (req, res) => {
+const create = async (req, res) => {
     try{
         const organization = await organizationService.addOrg(req.body);
         res.status(200).json(organization);
@@ -36,9 +36,39 @@ const addOrg = async (req, res) => {
     }
 }
 
+const getGroups = async (req, res) => {
+    try{
+        const organization = await organizationService.groupingAlgorithm(req.params.id);
+        res.status(200).json(organization);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+}
+
+const groupsAvailability = async (req, res) => {
+    try{
+        const organization = await organizationService.getGroupsAvailability(req.params.id);
+        res.status(200).json(organization);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+}
+
+const exportToCsv = async (req, res) => {
+    try{
+        const organization = await organizationService.exportGroupsToCSV(req.params.id);
+        res.status(200).json(organization);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+}
+
 module.exports = {
-    allOrgs,
-    specificOrg,
-    deleteOrg,
-    addOrg,
+    retrieveAll,
+    retrieve,
+    remove,
+    create,
+    getGroups,
+    groupsAvailability,
+    exportToCsv,
 }

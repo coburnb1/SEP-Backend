@@ -1,26 +1,28 @@
 const organizationDAO = require('../data-access/organizationDAO');
+const {getRespondentsByOrganization} = require("../data-access/respondentDAO");
+const organizationHelperService = require('./organizationHelperService');
 
-const getAllOrgs = async () => {
+const getAllOrgs = async (organizerID) => {
     try{
-        return await organizationDAO.getAllOrganizations();
+        return await organizationDAO.getOrganizationsByOrganizer(organizerID);
     }catch(err){
        console.error('Error finding organizations', err);
        throw err;
     }
 }
 
-const getOrg = async(organizationId) => {
+const getOrg = async(organizationID) => {
     try{
-        return await organizationDAO.getOrganization(organizationId);
+        return await organizationDAO.getOrganizationByID(organizationID);
     } catch(err){
         console.error('Error finding organization', err);
         throw err;
     }
 }
 
-const deleteOrg = async(organizationId) => {
+const deleteOrg = async(organizationID) => {
     try{
-        return await organizationDAO.deleteOrganization(organizationId);
+        return await organizationDAO.removeByID(organizationID);
     } catch(err){
         console.error('Error deleting organization', err);
         throw err;
@@ -29,11 +31,94 @@ const deleteOrg = async(organizationId) => {
 
 const addOrg = async(orgData) => {
     try{
-        return await organizationDAO.addOrganization(orgData);
+        return await organizationDAO.createOrg(orgData);
     } catch(err){
         console.error('Error adding organization', err);
         throw err;
     }
+}
+
+const groupingAlgorithm = async(organizationID) => {
+
+}
+
+const getGroupsAvailability = async (organizationID) => {
+    try {
+        const respondents = await getRespondentsByOrganization(organizationID);
+
+        const groupMap = {};
+
+        //group respondents by group_number (skip if group_number is null)
+        respondents.forEach(respondent => {
+            const group = respondent.group_number;
+            const availability = respondent.availability || [];
+
+            if (group === null || group === undefined) return;
+
+            if (!groupMap[group]) {
+                groupMap[group] = [];
+            }
+
+            groupMap[group].push(availability);
+        });
+
+        const groupAvailability = {};
+        const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+        for (const [group, availabilitiesList] of Object.entries(groupMap)) {
+            const groupAvailabilities = [];
+
+            for (const day of DAYS_OF_WEEK) {
+                //gather daily availability for each respondent in the group
+                const dailySlots = availabilitiesList.map(personSlots =>
+                    personSlots.filter(slot => slot.day === day)
+                );
+
+                //skip day if any respondent has no availability for it
+                if (dailySlots.some(slots => slots.length === 0)) continue;
+
+                //start with the first person’s slots
+                let intersection = dailySlots[0];
+
+                for (let i = 1; i < dailySlots.length; i++) {
+                    const nextPerson = dailySlots[i];
+                    const newIntersection = [];
+
+                    for (const slot1 of intersection) {
+                        for (const slot2 of nextPerson) {
+                            const start = Math.max(organizationHelperService.parseTime(slot1.start), organizationHelperService.parseTime(slot2.start));
+                            const end = Math.min(organizationHelperService.parseTime(slot1.end), organizationHelperService.parseTime(slot2.end));
+
+                            if (start < end) {
+                                newIntersection.push({
+                                    day,
+                                    start: organizationHelperService.formatTime(start),
+                                    end: organizationHelperService.formatTime(end)
+                                });
+                            }
+                        }
+                    }
+
+                    intersection = newIntersection;
+                    if (intersection.length === 0) break; //means no overlap left
+                }
+
+                groupAvailabilities.push(...intersection);
+            }
+
+            groupAvailability[group] = groupAvailabilities;
+        }
+
+        return groupAvailability;
+    } catch (err) {
+        console.error('Error getting group availabilities:', err);
+        throw err;
+    }
+};
+
+
+const exportGroupsToCSV = async (organizationID) => {
+
 }
 
 module.exports = {
@@ -41,4 +126,7 @@ module.exports = {
     getOrg,
     deleteOrg,
     addOrg,
+    groupingAlgorithm,
+    getGroupsAvailability,
+    exportGroupsToCSV,
 }
