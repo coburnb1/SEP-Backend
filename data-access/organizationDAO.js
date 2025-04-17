@@ -14,7 +14,11 @@ const getOrganizationsByOrganizer = async (organizerID) => {
 
 const getOrganizationByID = async (organizationID) => {
     try{
-        return await Organization.findById(organizationID);
+        const organization = await Organization.findById(organizationID);
+        if (!organization) {
+            throw new Error(`Organization with ID ${organizationID} not found.`);
+        }
+        return organization;
     } catch (err) {
         console.error('Error finding organization by ID', err);
         throw err;

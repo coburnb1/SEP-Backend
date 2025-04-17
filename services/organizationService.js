@@ -1,6 +1,9 @@
 const organizationDAO = require('../data-access/organizationDAO');
 const {getRespondentsByOrganization} = require("../data-access/respondentDAO");
 const organizationHelperService = require('./organizationHelperService');
+const {calculateAvailability, isRespondentInGroups, getRespondentsNotInGroups, findRespondentWithMaxAvailability,
+    calculateGroupAvailability, calculateAvailabilityOverlap, updateGroupIds
+} = require("./organizationHelperService");
 
 const getAllOrgs = async (organizerID) => {
     try{
@@ -39,7 +42,64 @@ const addOrg = async(orgData) => {
 }
 
 const groupingAlgorithm = async(organizationID) => {
+    try {
+        const respondents = await getRespondentsByOrganization(organizationID);
+        const organization = await organizationDAO.getOrganizationByID(organizationID);
+        const groupSize = organization.group_size;
+        const numberOfGroups = Math.floor(respondents.length / groupSize);
+        const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+        const groups = [];
 
+        let countGroupLeaders = 0;
+
+        respondents.forEach((respondent) => {
+            if (respondent.is_group_leader) {
+                countGroupLeaders += 1;
+                groups.push([respondent]);
+            }
+        })
+
+        if (countGroupLeaders < numberOfGroups) {
+            let leftover = numberOfGroups - countGroupLeaders;
+            while (leftover > 0) {
+                let maxAvailableRespondent = null;
+                const availableRespondents = getRespondentsNotInGroups(respondents, groups)
+                maxAvailableRespondent = findRespondentWithMaxAvailability(availableRespondents);
+                groups.push([maxAvailableRespondent])
+                leftover--;
+            }
+        }
+
+        let availableRespondents = getRespondentsNotInGroups(respondents, groups);
+        let maxAvailableRespondent = null;
+
+        while (availableRespondents.length > 0) {
+            maxAvailableRespondent = findRespondentWithMaxAvailability(availableRespondents);
+            let maxOverlap = 0;
+            let maxGroup = null;
+            groups.forEach(function (group) {
+                if (group.length > groupSize + 1) {
+                }
+                let groupAvailability = calculateGroupAvailability(group);
+                const overlap = calculateAvailabilityOverlap(groupAvailability, maxAvailableRespondent.availability);
+                if (overlap > maxOverlap) {
+                    maxOverlap = overlap;
+                    maxGroup = group;
+                }
+            });
+
+            if (maxGroup) {
+                maxGroup.push(maxAvailableRespondent);
+            }
+            // end
+            availableRespondents = getRespondentsNotInGroups(respondents, groups);
+        }
+
+        updateGroupIds(groups)
+        return await organizationDAO.getOrganizationByID(organizationID);
+    } catch(err){
+        console.error('Error updating groups', err);
+    }
 }
 
 const getGroupsAvailability = async (organizationID) => {
