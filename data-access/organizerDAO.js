@@ -1,8 +1,8 @@
 const Organizer = require('../models/organizerModel');
 
-const getOrganizerByEmailAndPassword = async (email, password) => {
+const getOrganizerByEmail = async (email) => {
     try {
-        return await Organizer.findOne({ email, password });
+        return await Organizer.findOne({ email });
     } catch (err) {
         console.error('Error finding organizer:', err);
         throw err;
@@ -31,7 +31,7 @@ const updateOrganizer = async (organizerID, updatedData) => {
 }
 
 module.exports = {
-    getOrganizerByEmailAndPassword,
+    getOrganizerByEmail,
     createOrganizer,
     updateOrganizer,
 };

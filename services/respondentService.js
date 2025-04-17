@@ -31,7 +31,7 @@ const submitRespondent = async (respondentData) => {
 
 const setGroupLeader = async (respondentID) => {
     try{
-        return await respondentDAO.setAsGroupLeader(respondentID);
+        return await respondentDAO.setGroupLeader(respondentID);
     }
     catch(err){
         console.error('Error setting respondent as group leader:', err);

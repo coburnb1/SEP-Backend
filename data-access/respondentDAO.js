@@ -32,11 +32,14 @@ const createRespondent = async (respondentData) => {
 
 const setGroupLeader = async (respondentID) => {
     try {
+
+        const respondent = await Respondent.findById(respondentID);
+
         return await Respondent.findByIdAndUpdate(
-            respondentID,
-            { $bit: { is_group_leader: { xor: 1 } } }, //simply flip the current bool value
-            { new: true }
-        );
+        respondentID,
+        { $set: { is_group_leader: !respondent.is_group_leader } },
+        { new: true }
+    );
     } catch (err) {
         console.error('Error flipping group leader status:', err);
         throw err;

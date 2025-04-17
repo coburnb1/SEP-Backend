@@ -46,7 +46,7 @@ const setGroupLeader = async (req, res) => {
 const setGroupNumber = async (req, res) => {
     try {
         const respondentID = req.params.id;
-        const respondent = await respondentService.setGroupNumber(respondentID, req.body.groupNumber);
+        const respondent = await respondentService.setGroupNumber(respondentID, req.body.group_number);
         res.status(200).json(respondent);
     }
     catch (err) {
