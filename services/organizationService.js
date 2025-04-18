@@ -1,7 +1,7 @@
 const organizationDAO = require('../data-access/organizationDAO');
 const {getRespondentsByOrganization} = require("../data-access/respondentDAO");
 const organizationHelperService = require('./organizationHelperService');
-const {calculateAvailability, isRespondentInGroups, getRespondentsNotInGroups, findRespondentWithMaxAvailability,
+const {getRespondentsNotInGroups, findRespondentWithMaxAvailability,
     calculateGroupAvailability, calculateAvailabilityOverlap, updateGroupIds
 } = require("./organizationHelperService");
 
@@ -46,7 +46,14 @@ const groupingAlgorithm = async(organizationID) => {
         const respondents = await getRespondentsByOrganization(organizationID);
         const organization = await organizationDAO.getOrganizationByID(organizationID);
         const groupSize = organization.group_size;
-        const numberOfGroups = Math.floor(respondents.length / groupSize);
+
+        let respondentsLength = 0;
+        for(const key in respondents) {
+            if(respondents.hasOwnProperty(key)) {
+                respondentsLength++;
+            }
+        }
+        const numberOfGroups = Math.floor(respondentsLength / groupSize);
         const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
         const groups = [];
 

@@ -10,6 +10,7 @@
     "bcrypt": "^5.1.1",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
+    "moment": "^2.30.1",
     "mongoose": "^7.2.2"
   },
   "devDependencies": {

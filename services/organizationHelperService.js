@@ -1,5 +1,6 @@
 //helper functions
 import {setGroupNumber} from "./respondentService";
+const moment = require('moment');
 
 function parseTime(timeStr) {
     const [hours, minutes] = timeStr.split(':').map(Number);
@@ -13,14 +14,7 @@ function formatTime(minutes) {
     return `${hrs}:${mins}`;
 }
 
-function isRespondentInGroups (groups, respondent) {
-    for (const group of groups) {
-        if (group.includes(respondent)) {
-            return true;
-        }
-    }
-    return false;
-}
+
 
 function calculateAvailability(availability) {
     if (!availability || availability.length === 0) {
@@ -190,7 +184,6 @@ function updateGroupIds(groups) {
 export {
     parseTime,
     formatTime,
-    isRespondentInGroups,
     calculateAvailability,
     getRespondentsNotInGroups,
     calculateAvailabilityOverlap,
