@@ -1,6 +1,5 @@
 //helper functions
-import {setGroupNumber} from "./respondentService";
-const moment = require('moment');
+import respondentService from '../services/respondentService.js';
 
 function parseTime(timeStr) {
     const [hours, minutes] = timeStr.split(':').map(Number);
@@ -173,7 +172,7 @@ function updateGroupIds(groups) {
     groups.forEach(function (group, groupId) {
         group.forEach(function (respondent) {
             respondent.groupId = groupId + 1; // Assign a groupId (starting from 1)
-            setGroupNumber(respondent.id, respondent.groupId).then();
+            respondentService.setGroupNumber(respondent.id, respondent.groupId).then();
         });
     });
 }

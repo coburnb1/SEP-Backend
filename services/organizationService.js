@@ -183,7 +183,6 @@ const getGroupsAvailability = async (organizationID) => {
     }
 };
 
-
 const exportGroupsToCSV = async (organizationID) => {
 
 }

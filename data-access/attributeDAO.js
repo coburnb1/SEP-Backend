@@ -1,10 +1,11 @@
 const Attribute = require('../models/attributeModel');
+const Organization = require('../models/organizationModel');
 
-const updateRule = async (attributeId, rule) => {
-    try{
-        return await Attribute.findByIdAndUpdate(
-            attributeId,
-            { $set: { rule: rule } },
+const updateRule = async (orgId, attributeId, rule) => {
+    try {
+        return await Organization.findOneAndUpdate(
+            { _id: orgId, "attributes._id": attributeId },
+            { $set: { "attributes.$.rule": rule } },
             { new: true }
         );
     } catch (err) {
@@ -13,11 +14,11 @@ const updateRule = async (attributeId, rule) => {
     }
 }
 
-const updatePriority = async (attributeId, priority) => {
-    try{
-        return await Attribute.findByIdAndUpdate(
-            attributeId,
-            { $set: { priority: priority } },
+const updatePriority = async (orgId, attributeId, priority) => {
+    try {
+        return await Organization.findOneAndUpdate(
+            { _id: orgId, "attributes._id": attributeId },
+            { $set: { "attributes.$.priority": priority } },
             { new: true }
         );
     } catch (err) {
@@ -25,6 +26,7 @@ const updatePriority = async (attributeId, priority) => {
         throw err;
     }
 }
+
 
 module.exports = {
     updateRule,

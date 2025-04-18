@@ -17,7 +17,7 @@ app.use(express.json());
 app.use('/api/organizers', organizerRoutes);
 app.use('/api/respondents', respondentRoutes);
 app.use('/api/orgs', organizationRoutes);
-app.use('/api/attribute', attributeRoutes);
+app.use('/api/orgs', attributeRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
