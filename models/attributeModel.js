@@ -1,3 +1,4 @@
+/* NOT NEEDED RIGHT NOW, KEEP AS A REFERENCE
 const mongoose = require('mongoose');
 
 const attributeSchema = new mongoose.Schema({
@@ -9,3 +10,5 @@ const attributeSchema = new mongoose.Schema({
 
 
 module.exports = mongoose.model('Attribute', attributeSchema);
+
+ */

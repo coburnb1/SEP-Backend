@@ -43,29 +43,34 @@ const addOrg = async(orgData) => {
 
 const groupingAlgorithm = async(organizationID) => {
     try {
+        //Fetch Data
         const respondents = await getRespondentsByOrganization(organizationID);
         const organization = await organizationDAO.getOrganizationByID(organizationID);
         const groupSize = organization.group_size;
 
+        //Count respondents
         let respondentsLength = 0;
         for(const key in respondents) {
             if(respondents.hasOwnProperty(key)) {
                 respondentsLength++;
             }
         }
+        //determine how many groups to form
         const numberOfGroups = Math.floor(respondentsLength / groupSize);
         const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
         const groups = [];
 
+        //initalize empty groups with group leaders
         let countGroupLeaders = 0;
-
         respondents.forEach((respondent) => {
             if (respondent.is_group_leader) {
                 countGroupLeaders += 1;
                 groups.push([respondent]);
             }
         })
+        //TODO: What if there are more group leaders than groups?
 
+        //If there aren't enough group leaders for all of the groups, pick the respondents with the most availability to start the remaining groups.
         if (countGroupLeaders < numberOfGroups) {
             let leftover = numberOfGroups - countGroupLeaders;
             while (leftover > 0) {
@@ -77,33 +82,49 @@ const groupingAlgorithm = async(organizationID) => {
             }
         }
 
+
+
         let availableRespondents = getRespondentsNotInGroups(respondents, groups);
         let maxAvailableRespondent = null;
 
         while (availableRespondents.length > 0) {
+            //find the respondent with the most total availability
             maxAvailableRespondent = findRespondentWithMaxAvailability(availableRespondents);
+
             let maxOverlap = 0;
-            let maxGroup = null;
-            groups.forEach(function (group) {
-                if (group.length > groupSize + 1) {
-                }
-                let groupAvailability = calculateGroupAvailability(group);
+            let bestGroupIndex = null;
+
+            //Find the group with the most availability overlap for this respondent
+            groups.forEach((group, index) => {
+                const groupAvailability = calculateGroupAvailability(group);
                 const overlap = calculateAvailabilityOverlap(groupAvailability, maxAvailableRespondent.availability);
+
                 if (overlap > maxOverlap) {
                     maxOverlap = overlap;
-                    maxGroup = group;
+                    bestGroupIndex = index;
                 }
             });
 
-            if (maxGroup) {
-                maxGroup.push(maxAvailableRespondent);
+            //add respondent to the group with best availability match
+            if (bestGroupIndex !== null) {
+                groups[bestGroupIndex].push(maxAvailableRespondent);
+            } else {
+                //if no overlap is found at all (unlikely), just add to the smallest group
+                let smallestGroupIndex = groups.reduce((minIndex, group, index, arr) =>
+                    group.length < arr[minIndex].length ? index : minIndex, 0
+                );
+                groups[smallestGroupIndex].push(maxAvailableRespondent);
             }
-            // end
+
+            //Update the list of ungrouped respondents
             availableRespondents = getRespondentsNotInGroups(respondents, groups);
         }
 
-        updateGroupIds(groups)
+        //save the group IDs to the database
+        updateGroupIds(groups);
+
         return await organizationDAO.getOrganizationByID(organizationID);
+
     } catch(err){
         console.error('Error updating groups', err);
     }

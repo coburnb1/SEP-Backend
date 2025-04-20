@@ -1,5 +1,6 @@
 //helper functions
 import respondentService from '../services/respondentService.js';
+import moment from 'moment';
 
 function parseTime(timeStr) {
     const [hours, minutes] = timeStr.split(':').map(Number);
@@ -22,10 +23,10 @@ function calculateAvailability(availability) {
     let totalHours = 0;
 
     availability.forEach(function (slot) {
-        const startTime = moment(slot.start, 'HH:mm'); // Parse start time
-        const endTime = moment(slot.end, 'HH:mm');     // Parse end time
-        const duration = moment.duration(endTime.diff(startTime)); // Calculate duration
-        totalHours += duration.asHours(); // Convert duration to hours and add to total
+        const startTime = moment(slot.start, 'HH:mm'); //parse start time
+        const endTime = moment(slot.end, 'HH:mm');     //parse end time
+        const duration = moment.duration(endTime.diff(startTime)); //calculate duration
+        totalHours += duration.asHours(); //convert duration to hours and add to total
     });
 
     return totalHours;
@@ -124,8 +125,8 @@ function calculateGroupAvailability(group) {
                             // If there's a valid overlap, include it
                             if (overlapStart.isBefore(overlapEnd)) {
                                 return {
-                                    start: overlapStart.format("HH:mm"),
-                                    end: overlapEnd.format("HH:mm")
+                                    start: overlapStart,
+                                    end: overlapEnd
                                 };
                             }
                             return null; // Ignore if no overlap
@@ -163,6 +164,7 @@ function findRespondentWithMaxAvailability(respondents) {
             maxAvailableTime = totalAvailability;
             maxAvailableRespondent = respondent;
         }
+
     });
 
     return maxAvailableRespondent; // Return the respondent with the most available time
