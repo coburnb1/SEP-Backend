@@ -1,9 +1,11 @@
 const organizationDAO = require('../data-access/organizationDAO');
-const {getRespondentsByOrganization} = require("../data-access/respondentDAO");
+const {getRespondentsByOrganization, getRespondentByID} = require("../data-access/respondentDAO");
 const organizationHelperService = require('./organizationHelperService');
 const {getRespondentsNotInGroups, findRespondentWithMaxAvailability,
     calculateGroupAvailability, calculateAvailabilityOverlap, updateGroupIds
 } = require("./organizationHelperService");
+const { Parser } = require('json2csv');
+
 
 const getAllOrgs = async (organizerID) => {
     try{
@@ -205,7 +207,19 @@ const getGroupsAvailability = async (organizationID) => {
 };
 
 const exportGroupsToCSV = async (organizationID) => {
+    const respondents = await getRespondentsByOrganization(organizationID);
 
+    const exportData = respondents.map(respondent => ({
+        Name: respondent.name,
+        Email: respondent.email,
+        Group: respondent.group_number ?? "Unassigned",
+    }));
+
+    const fields = ['Name', 'Email', 'Group'];
+    const parser = new Parser({ fields });
+    const csv = parser.parse(exportData);
+
+    return csv;
 }
 
 module.exports = {
