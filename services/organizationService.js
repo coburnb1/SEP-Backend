@@ -1,5 +1,5 @@
 const organizationDAO = require('../data-access/organizationDAO');
-const {getRespondentsByOrganization, getRespondentByID} = require("../data-access/respondentDAO");
+const {getRespondentsByOrganization, getRespondentByID, setGroupNumberTo} = require("../data-access/respondentDAO");
 const organizationHelperService = require('./organizationHelperService');
 const {getRespondentsNotInGroups, findRespondentWithMaxAvailability,
     calculateGroupAvailability, calculateAvailabilityOverlap, updateGroupIds
@@ -50,6 +50,14 @@ const groupingAlgorithm = async(organizationID) => {
         const organization = await organizationDAO.getOrganizationByID(organizationID);
         const groupSize = organization.group_size;
 
+        //wipe existing group numbers for respondents
+        for (const key in respondents) {
+            if (respondents.hasOwnProperty(key)) {
+                const respondent = respondents[key];
+                await setGroupNumberTo(respondent.id, null);
+            }
+        }
+
         //Count respondents
         let respondentsLength = 0;
         for(const key in respondents) {
@@ -57,24 +65,34 @@ const groupingAlgorithm = async(organizationID) => {
                 respondentsLength++;
             }
         }
-        //determine how many groups to form
+        //determine how many groups to form (no partial groups)
         const numberOfGroups = Math.floor(respondentsLength / groupSize);
-        const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
         const groups = [];
 
+        //count number of group leaders, make sure it's less than # of groups
+        let numberOfLeaders = 0;
+        for (const key in respondents) {
+            if (respondents.hasOwnProperty(key)) {
+                const respondent = respondents[key];
+                if (respondent.isLeader) {
+                    numberOfLeaders++;
+                }
+            }
+        }
+        if (numberOfLeaders > numberOfGroups) {
+            throw new Error(`Too many group leaders: ${numberOfLeaders} for ${numberOfGroups} groups`);
+        }
+
         //initalize empty groups with group leaders
-        let countGroupLeaders = 0;
         respondents.forEach((respondent) => {
             if (respondent.is_group_leader) {
-                countGroupLeaders += 1;
                 groups.push([respondent]);
             }
         })
-        //TODO: What if there are more group leaders than groups?
 
         //If there aren't enough group leaders for all of the groups, pick the respondents with the most availability to start the remaining groups.
-        if (countGroupLeaders < numberOfGroups) {
-            let leftover = numberOfGroups - countGroupLeaders;
+        if (numberOfLeaders < numberOfGroups) {
+            let leftover = numberOfGroups - numberOfLeaders;
             while (leftover > 0) {
                 let maxAvailableRespondent = null;
                 const availableRespondents = getRespondentsNotInGroups(respondents, groups)
@@ -84,11 +102,11 @@ const groupingAlgorithm = async(organizationID) => {
             }
         }
 
-
-
+        //get all remaining available repsondents
         let availableRespondents = getRespondentsNotInGroups(respondents, groups);
         let maxAvailableRespondent = null;
 
+        //assign remaining respondents to groups
         while (availableRespondents.length > 0) {
             //find the respondent with the most total availability
             maxAvailableRespondent = findRespondentWithMaxAvailability(availableRespondents);
@@ -128,7 +146,7 @@ const groupingAlgorithm = async(organizationID) => {
         return await organizationDAO.getOrganizationByID(organizationID);
 
     } catch(err){
-        console.error('Error updating groups', err);
+        console.error('Error in Grouping Algorithm', err);
     }
 }
 

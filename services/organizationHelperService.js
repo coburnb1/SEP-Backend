@@ -48,7 +48,6 @@ function getRespondentsNotInGroups(respondents, groups) {
             respondentsNotInGroups.push(respondent);
         }
     });
-
     return respondentsNotInGroups;
 }
 
@@ -154,8 +153,10 @@ function calculateGroupAvailability(group) {
 }
 
 function findRespondentWithMaxAvailability(respondents) {
-    let maxAvailableTime = 0;
-    let maxAvailableRespondent = null;
+    if (!respondents || respondents.length === 0) return null;
+
+    let maxAvailableRespondent = respondents[0];
+    let maxAvailableTime = calculateAvailability(maxAvailableRespondent.availability);
 
     respondents.forEach((respondent) => {
         const totalAvailability = calculateAvailability(respondent.availability);
@@ -164,11 +165,10 @@ function findRespondentWithMaxAvailability(respondents) {
             maxAvailableTime = totalAvailability;
             maxAvailableRespondent = respondent;
         }
-
     });
-
-    return maxAvailableRespondent; // Return the respondent with the most available time
+    return maxAvailableRespondent;
 }
+
 
 function updateGroupIds(groups) {
     groups.forEach(function (group, groupId) {
